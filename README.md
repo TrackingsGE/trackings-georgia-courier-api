@@ -15,8 +15,6 @@ Georgian courier and parcel tracking API
 Грузинский API для курьерских и почтовых отправлений.
 **Документация:** https://docs.trackings.ge/
 
-This repository is structured for **SEO** and **GEO** discoverability. It includes a clean OpenAPI spec, concise docs, and runnable examples (curl & JavaScript).
-
 ## Quick Start
 
 ```bash
