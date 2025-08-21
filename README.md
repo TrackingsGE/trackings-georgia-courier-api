@@ -2,6 +2,19 @@
 Georgian courier and parcel tracking API. საქართველოს საკურიერო და ამანათების თრექინგის API. Грузинский API для курьерских и почтовых отправлений.
 (Tbilisi, Batumi, Kutaisi).
 
+## 🇬🇧 English
+Trackings.ge API provides shipping, tracking, pickup/drop-off, address, and order management in Georgia.  
+**Docs:** https://docs.trackings.ge/  
+**Swagger:** https://docs.trackings.ge/trackingsge_openapi.yaml  
+
+## 🇬🇪 ქართული
+Trackings.ge API გთავაზობთ გადაზიდვის, თრექინგის, პიკაპ/დროფ-ოფის, მისამართებისა და შეკვეთების მართვას.  
+**დოკუმენტაცია:** https://docs.trackings.ge/  
+
+## 🇷🇺 Русский
+Trackings.ge API предоставляет доставку, отслеживание, пункты приема/выдачи, адреса и управление заказами.  
+**Документация:** https://docs.trackings.ge/
+
 This repository is structured for **SEO** and **GEO** discoverability. It includes a clean OpenAPI spec, concise docs, and runnable examples (curl & JavaScript).
 
 ## Quick Start
