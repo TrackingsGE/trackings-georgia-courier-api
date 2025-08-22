@@ -1,0 +1,1066 @@
+openapi: 3.0.3
+info:
+  title: Trackings.ge Courier API
+  version: 1.0.1
+  description: Official API for Trackings.ge. Endpoints for managing orders, addresses,
+    pricing, invoices, and more. Available in KA/EN/RU; covers courier pricing, tracking,
+    COD, express delivery, and PUDO locations across Georgia (Tbilisi, Batumi, Kutaisi).
+  termsOfService: https://trackings.ge/en/terms-and-conditions
+  contact:
+    name: Trackings.ge Support
+    url: https://trackings.ge
+    email: support@trackings.ge
+  x-logo:
+    url: https://trackings.ge/assets/images/trackings_logo.png
+externalDocs:
+  description: Developer Portal
+  url: https://trackings.ge/developer-portal
+servers:
+- url: https://trackings.ge/api
+  description: Production server
+security:
+- BearerAuth: []
+tags:
+- name: Orders
+  description: Create, update, delete, and fetch orders
+- name: Geography
+  description: Regions and cities
+- name: PUDO
+  description: Pick-up / drop-off locations
+- name: Addresses
+  description: Manage saved addresses
+- name: Pricing
+  description: Calculate delivery price estimates before creating an order
+- name: Invoices
+  description: List downloadable monthly invoices (PDF/Excel)
+paths:
+  /orders:
+    post:
+      summary: Create Order
+      description: Create a new order.
+      operationId: createOrder
+      tags:
+      - Orders
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Order'
+            example:
+              weight: 2.5
+              items_quantity: 1
+              payer: SENDER
+              payment_method: CASHLESS
+              is_express: false
+              sender:
+                pickup_method: COURIER
+                phone_number: '+995599123456'
+                address:
+                  address: Chavchavadze Ave 10
+                  city_id: 1
+                  type: SENDER
+              receiver:
+                delivery_method: COURIER
+                receiver_name: Nika
+                phone_number: '+995598000000'
+                address:
+                  address: Rustaveli Ave 5
+                  city_id: 1
+                  type: RECEIVER
+              billing:
+                cod: 70
+      responses:
+        '201':
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      summary: Get list of user orders (paginated)
+      tags:
+      - Orders
+      responses:
+        '200':
+          description: List of user orders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Order'
+                  meta:
+                    type: object
+  /orders/{identifier}:
+    get:
+      summary: Get Order Details
+      description: Fetch an order by `order_id` (integer), `uuid`, `tracking_code`,
+        or `client_tracking_code`.
+      operationId: getOrder
+      tags:
+      - Orders
+      parameters:
+      - in: path
+        name: identifier
+        required: true
+        schema:
+          type: string
+        description: 'Order identifier: order_id (int), uuid, tracking_code, or client_tracking_code.'
+      responses:
+        '200':
+          description: Order details returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Order not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Update Order
+      description: Update an existing order. Requires a numeric `order_id`; returns
+        400 if `identifier` is not numeric.
+      operationId: updateOrder
+      tags:
+      - Orders
+      parameters:
+      - in: path
+        name: identifier
+        required: true
+        schema:
+          type: integer
+          format: int64
+        description: Numeric order_id of the order to update.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Order'
+      responses:
+        '200':
+          description: Order updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Order not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Cannot update â€“ order status is not CREATE
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Delete Order
+      description: Delete an existing order. Requires a numeric `order_id`; returns
+        400 if `identifier` is not numeric.
+      operationId: deleteOrder
+      tags:
+      - Orders
+      parameters:
+      - in: path
+        name: identifier
+        required: true
+        schema:
+          type: integer
+          format: int64
+        description: Numeric order_id of the order to delete.
+      responses:
+        '200':
+          description: Order deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - message
+                properties:
+                  message:
+                    type: string
+                    example: Order deleted successfully
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Order not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Cannot delete â€“ order status is not CREATE
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /geo/regions:
+    get:
+      summary: Get all regions
+      tags:
+      - Geography
+      responses:
+        '200':
+          description: List of regions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Region'
+  /geo/cities:
+    get:
+      summary: Get all cities
+      tags:
+      - Geography
+      responses:
+        '200':
+          description: List of cities
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/City'
+  /geo/region/{region_id}/cities:
+    get:
+      summary: Get cities in a region
+      tags:
+      - Geography
+      parameters:
+      - name: region_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Cities for a given region
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  regions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        cities:
+                          type: array
+                          items:
+                            $ref: '#/components/schemas/City'
+  /geo/pudos:
+    get:
+      summary: Get all PUDO points
+      tags:
+      - PUDO
+      responses:
+        '200':
+          description: List of PUDO points
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Pudo'
+  /geo/pudo/cities:
+    get:
+      summary: Get cities that have PUDO points
+      tags:
+      - PUDO
+      responses:
+        '200':
+          description: Cities with PUDO points
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/City'
+  /geo/city/{city_id}/pudos:
+    get:
+      summary: Get PUDO points in a specific city
+      tags:
+      - PUDO
+      parameters:
+      - name: city_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: PUDO points in the city
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Pudo'
+  /addresses:
+    get:
+      summary: List user addresses
+      tags:
+      - Addresses
+      parameters:
+      - in: query
+        name: type
+        schema:
+          type: string
+          enum:
+          - SENDER
+          - RECEIVER
+        description: Filter by address type
+      responses:
+        '200':
+          description: List of addresses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Address'
+    post:
+      summary: Create a new address
+      tags:
+      - Addresses
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - address
+              - type
+              - city_id
+              properties:
+                address:
+                  type: string
+                type:
+                  type: string
+                  enum:
+                  - SENDER
+                  - RECEIVER
+                city_id:
+                  type: integer
+      responses:
+        '201':
+          description: Address created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+  /addresses/{id}:
+    get:
+      summary: Get a specific address
+      tags:
+      - Addresses
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Address data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+    put:
+      summary: Update a specific address
+      tags:
+      - Addresses
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - address
+              - type
+              - city_id
+              properties:
+                address:
+                  type: string
+                type:
+                  type: string
+                  enum:
+                  - SENDER
+                  - RECEIVER
+                city_id:
+                  type: integer
+      responses:
+        '200':
+          description: Address updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+    delete:
+      summary: Delete a specific address
+      tags:
+      - Addresses
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Address deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /get-price:
+    get:
+      tags:
+      - Pricing
+      summary: Calculate delivery price estimate
+      description: Returns an estimated price breakdown for a shipment based on pickup/delivery
+        methods, cities, weight and optional services (COD, express, insurance, photo).
+      parameters:
+      - in: query
+        name: weight
+        required: true
+        schema:
+          type: number
+          format: float
+          minimum: 0.01
+          maximum: 1000
+        description: Parcel weight in kilograms.
+      - in: query
+        name: cod_amount
+        schema:
+          type: number
+          format: float
+        description: COD amount to collect from receiver.
+      - in: query
+        name: to_have_picture
+        schema:
+          type: boolean
+        description: Require photo proof of delivery.
+      - in: query
+        name: is_express
+        schema:
+          type: boolean
+        description: Enable express delivery (where available).
+      - in: query
+        name: insured
+        schema:
+          type: boolean
+        description: Enable shipment insurance.
+      - in: query
+        name: pickup_method
+        required: true
+        schema:
+          type: string
+          enum:
+          - COURIER
+          - PUDO
+      - in: query
+        name: delivery_method
+        required: true
+        schema:
+          type: string
+          enum:
+          - COURIER
+          - PUDO
+      - in: query
+        name: sender_city_id
+        required: true
+        schema:
+          type: integer
+      - in: query
+        name: receiver_city_id
+        required: true
+        schema:
+          type: integer
+      - in: query
+        name: items_quantity
+        schema:
+          type: integer
+          minimum: 1
+      - in: query
+        name: return_decision
+        schema:
+          type: string
+          enum:
+          - RETURN_TO_SENDER
+          - SEND_TO_SERVICE_CENTER
+          - CANCELED
+      - in: query
+        name: return_pudo_id
+        schema:
+          type: integer
+        description: Required if `return_decision` is `SEND_TO_SERVICE_CENTER`.
+      - in: query
+        name: payer
+        schema:
+          type: string
+          enum:
+          - SENDER
+          - RECEIVER
+      responses:
+        '200':
+          description: Estimated fees
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      delivery_fee:
+                        type: string
+                        example: '6.50'
+                      cod_fee:
+                        type: string
+                        example: '3.00'
+                      cod:
+                        type: string
+                        example: '150.00'
+                      photo_service_fee:
+                        type: string
+                        example: '0.00'
+                      handover_service_fee:
+                        type: string
+                        example: '0.00'
+                      insurance_fee:
+                        type: string
+                        example: '0.00'
+                      sender_fee:
+                        type: string
+                        example: '9.50'
+                      receiver_fee:
+                        type: string
+                        example: '150.00'
+                      express_fee:
+                        type: string
+                        example: '0.00'
+                      return_fee:
+                        type: string
+                        example: '0.98'
+                      return_delivery_fee:
+                        type: string
+                        example: '6.50'
+  /invoices:
+    get:
+      tags:
+      - Invoices
+      summary: List monthly invoices
+      description: Returns monthly invoices (PDF/Excel links) for the authenticated
+        account.
+      responses:
+        '200':
+          description: Invoices list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Invoice'
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Validation failed
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+      required:
+      - message
+    Order:
+      type: object
+      properties:
+        order_id:
+          type: integer
+          format: int64
+          example: 1197
+        uuid:
+          type: string
+          format: uuid
+          example: 9f1f4671-7c2e-437f-85f4-bae8e095948f
+        tracking_code:
+          type: string
+          example: '170790005552128'
+        client_tracking_code:
+          type: string
+          nullable: true
+          example: ABC123
+        current_status:
+          type: string
+          enum:
+          - CREATE
+          - IN_TRANSIT
+          - DELIVERED
+          - RETURNED
+          - CANCELED
+          example: CREATE
+        current_status_text:
+          type: string
+          example: Awaiting Pickup
+        weight:
+          type: number
+          format: float
+          example: 2.5
+        items_quantity:
+          type: integer
+          format: int32
+          example: 1
+          description: Number of items in the order
+        insured:
+          type: boolean
+          example: false
+        fragile:
+          type: boolean
+          example: false
+        to_have_picture:
+          type: boolean
+          example: false
+        is_express:
+          type: boolean
+          example: false
+        comment:
+          type: string
+          nullable: true
+          example: null
+        payer:
+          type: string
+          enum:
+          - SENDER
+          - RECEIVER
+          example: SENDER
+          description: Who pays for the delivery
+        payment_method:
+          type: string
+          enum:
+          - CASH
+          - CASHLESS
+          example: CASH
+        created_at:
+          type: string
+          format: date-time
+          example: '2025-07-15T15:47:46Z'
+        delivery_at:
+          type: string
+          format: date-time
+          nullable: true
+          example: null
+        sign_image:
+          type: string
+          format: uri
+          nullable: true
+          example: null
+        label:
+          type: string
+          format: uri
+          nullable: true
+          example: null
+        sender:
+          $ref: '#/components/schemas/Sender'
+        receiver:
+          $ref: '#/components/schemas/Receiver'
+        billing:
+          $ref: '#/components/schemas/Billing'
+        return_info:
+          $ref: '#/components/schemas/Return'
+      required:
+      - weight
+      - items_quantity
+      - payer
+      - payment_method
+      - sender
+      - receiver
+    Billing:
+      type: object
+      description: Billing details for the order
+      properties:
+        delivery_fee:
+          type: number
+          format: float
+          example: 5.0
+        cod:
+          type: number
+          format: float
+          example: 70.0
+        cod_fee:
+          type: number
+          format: float
+          example: 1.4
+        cod_fee_payer:
+          type: string
+          enum:
+          - SENDER
+          - RECEIVER
+          example: SENDER
+        photo_service_fee:
+          type: number
+          format: float
+          example: 0.0
+        insurance_fee:
+          type: number
+          format: float
+          example: 0.0
+        express_fee:
+          type: number
+          format: float
+          example: 0.0
+        sender_fee:
+          type: number
+          format: float
+          example: 6.4
+        receiver_fee:
+          type: number
+          format: float
+          example: 70.0
+        return_fee:
+          type: number
+          format: float
+          example: 0.75
+        return_delivery_fee:
+          type: number
+          format: float
+          example: 5.0
+        sender_paid_date:
+          type: string
+          format: date-time
+          nullable: true
+          example: null
+        receiver_paid_date:
+          type: string
+          format: date-time
+          nullable: true
+          example: null
+        cod_transaction_date:
+          type: string
+          format: date-time
+          nullable: true
+          example: null
+    Sender:
+      type: object
+      required:
+      - pickup_method
+      - phone_number
+      properties:
+        pickup_method:
+          type: string
+          enum:
+          - COURIER
+          - PUDO
+        country_code:
+          type: string
+          nullable: true
+          example: GE
+        phone_number:
+          type: string
+        address:
+          $ref: '#/components/schemas/Address'
+        pudo:
+          $ref: '#/components/schemas/Pudo'
+    Receiver:
+      type: object
+      required:
+      - delivery_method
+      - phone_number
+      - receiver_name
+      properties:
+        delivery_method:
+          type: string
+          enum:
+          - COURIER
+          - PUDO
+        is_legal_entity:
+          type: boolean
+        gov_number:
+          type: string
+          nullable: true
+        organization_name:
+          type: string
+          nullable: true
+        phone_number:
+          type: string
+        receiver_name:
+          type: string
+        address:
+          $ref: '#/components/schemas/Address'
+        pudo:
+          $ref: '#/components/schemas/Pudo'
+    Address:
+      type: object
+      required:
+      - address
+      - city_id
+      - type
+      properties:
+        id:
+          type: integer
+          format: int64
+        address:
+          type: string
+        city_id:
+          type: integer
+          format: int64
+        type:
+          type: string
+          enum:
+          - SENDER
+          - RECEIVER
+        latitude:
+          type: number
+          example: 41.7151377
+        longitude:
+          type: number
+          example: 44.827096
+        created_at:
+          type: string
+          format: date-time
+        state:
+          type: string
+        city:
+          $ref: '#/components/schemas/City'
+    Pudo:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 9
+        city_id:
+          type: integer
+          format: int64
+          example: 1
+        name_ka:
+          type: string
+          example: áƒ’áƒšáƒ“áƒáƒœáƒ˜, 4-áƒ” áƒ›áƒ˜áƒ™áƒ áƒ áƒ áƒáƒ˜áƒáƒœáƒ˜, áƒ™áƒáƒ áƒžáƒ£áƒ¡áƒ˜ 92áƒ, áƒ¨áƒ”áƒœáƒáƒ‘áƒ 5.
+        city_name:
+          type: string
+          example: áƒ—áƒ‘áƒ˜áƒšáƒ˜áƒ¡áƒ˜
+        latitude:
+          type: number
+          example: 41.79841113091622
+        longitude:
+          type: number
+          example: 44.81899422384513
+        city:
+          $ref: '#/components/schemas/City'
+    City:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        name_en:
+          type: string
+        name_ru:
+          type: string
+    Region:
+      type: object
+      required:
+      - id
+      - name
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        name_en:
+          type: string
+          nullable: true
+        name_ka:
+          type: string
+          nullable: true
+        name_ru:
+          type: string
+          nullable: true
+        latitude:
+          type: string
+          nullable: true
+        longitude:
+          type: string
+          nullable: true
+    Return:
+      type: object
+      description: Return instructions and details for the order
+      properties:
+        return_decision:
+          type: string
+          description: What to do if delivery fails (RETURN_TO_SENDER, SEND_TO_SERVICE_CENTER,
+            CANCELED)
+          example: SEND_TO_SERVICE_CENTER
+        label:
+          type: string
+          format: uri
+          nullable: true
+          example: null
+        notes:
+          type: string
+          nullable: true
+          example: null
+        address:
+          allOf:
+          - $ref: '#/components/schemas/Address'
+          nullable: true
+          description: Return address details if returned to sender
+        pudo:
+          allOf:
+          - $ref: '#/components/schemas/Pudo'
+          nullable: true
+          description: PUDO point if returned to a service center
+    Invoice:
+      type: object
+      properties:
+        month:
+          type: string
+          description: YYYY-MM
+          example: 2025-06
+        excel:
+          type: string
+          format: uri
+          example: https://.../invoice-2025-06.xlsx
+        pdf:
+          type: string
+          format: uri
+          example: https://.../invoice-2025-06.pdf
+        amount:
+          type: string
+          example: '66.84'
+        status:
+          type: string
+          enum:
+          - paid
+          - pending
+          example: paid
+        issued_at:
+          type: string
+          format: date-time
+          example: '2025-06-03 10:05:58'
+        paid_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          example: '2025-06-10 11:07:42'
