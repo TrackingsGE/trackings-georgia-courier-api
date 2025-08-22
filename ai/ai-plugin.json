@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "Trackings.ge",
+  "name_for_model": "trackings",
+  "description_for_human": "Georgian parcel tracking and registering API.",
+  "description_for_model": "Fetch parcel info, pricing, delivery status, address and region data.",
+  "auth": {
+    "type": "bearer"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://docs.trackings.ge/trackingsge_openapi.yaml"
+  },
+  "logo_url": "https://docs.trackings.ge/logo.jpg",
+  "contact_email": "support@trackings.ge",
+  "legal_info_url": "https://trackings.ge/en/terms-and-conditions"
+}
