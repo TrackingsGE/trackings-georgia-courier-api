@@ -1,0 +1,11 @@
+# robots-ai.txt generated 2025-07-29
+
+User-agent: *
+Allow: /
+
+Sitemap: https://trackings.ge/sitemap.xml
+
+# AI Plugin declarations
+Plugin: https://docs.trackings.ge/.well-known/ai-plugin.json
+OpenAPI: https://docs.trackings.ge/trackingsge_openapi.yaml
+Documentation: https://docs.trackings.ge/
