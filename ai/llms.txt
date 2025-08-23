@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+# Core AI plugin metadata and OpenAPI specification
+Plugin: https://docs.trackings.ge/.well-known/ai-plugin.json
+OpenAPI: https://docs.trackings.ge/trackingsge_openapi.yaml
+Documentation: https://docs.trackings.ge/
+
+# Developer landing page for human and LLM entry
+DeveloperPortal: https://trackings.ge/developer-portal
+
+# Sitemap for indexing and AI route discovery
+Sitemap: https://trackings.ge/sitemap.xml 
